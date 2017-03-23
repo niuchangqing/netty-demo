@@ -2,6 +2,8 @@ package cn.com.netty.demo.client;
 
 import cn.com.netty.demo.utils.Log;
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -9,41 +11,43 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 
 /**
 * @author Niucqing
 * @email niucqing@gmail.com
-* @version 创建时间：2017年3月22日 下午7:37:57
+* @version 创建时间：2017年3月23日 下午5:30:10
 * 类说明
 */
-public class TimeClient {
+public class EchoClientDemo {
 
 	public static void main(String[] args) throws InterruptedException {
-		start();
+		start(8088);
 	}
 
-	public static void start() throws InterruptedException {
-		EventLoopGroup client = new NioEventLoopGroup();
+	public static void start(int port) throws InterruptedException {
+		EventLoopGroup group = new NioEventLoopGroup();
 
 		try {
 			Bootstrap boot = new Bootstrap();
-			boot.group(client).channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY, true)
+			boot.group(group).channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY, true)
 					.handler(new ChannelInitializer<SocketChannel>() {
 						@Override
 						protected void initChannel(SocketChannel ch) throws Exception {
-							ch.pipeline().addLast(new LineBasedFrameDecoder(1024)).addLast(new StringDecoder())
-									.addLast(new TimeClientHandler());
+							ByteBuf delimiter = Unpooled.copiedBuffer("||".getBytes());
+							ch.pipeline().addLast(new DelimiterBasedFrameDecoder(1024, delimiter))
+									.addLast(new StringDecoder()).addLast(new EchoClientHandler());
 						}
 					});
-			ChannelFuture future = boot.connect("127.0.0.1", 8088).sync();
-			Log.log("client is connected ...");
-			future.channel().closeFuture().sync();
+			ChannelFuture f = boot.connect("localhost",port).sync();
+
+			Log.log("client started...");
+			f.channel().closeFuture().sync();
 		} catch (Exception e) {
 			Log.log(e);
 		} finally {
-			client.shutdownGracefully();
+			group.shutdownGracefully();
 		}
 	}
 

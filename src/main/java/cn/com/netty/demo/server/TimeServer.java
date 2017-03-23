@@ -27,9 +27,14 @@ public class TimeServer {
 					.option(ChannelOption.SO_BACKLOG, 1024).childHandler(new ChildChannelHandler());
 
 			ChannelFuture future = boot.bind(PORT).sync();
+			
+			Log.log("time server started...");
 			future.channel().closeFuture().sync();
 		} catch (Exception e) {
 			Log.log(e);
+		}finally{
+			bossGroup.shutdownGracefully();
+			workerGroup.shutdownGracefully();
 		}
 	}
 

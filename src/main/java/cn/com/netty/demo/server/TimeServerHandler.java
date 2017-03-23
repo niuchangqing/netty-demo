@@ -1,7 +1,5 @@
 package cn.com.netty.demo.server;
 
-import java.io.UnsupportedEncodingException;
-
 import org.joda.time.DateTime;
 
 import cn.com.netty.demo.utils.Log;
@@ -17,6 +15,8 @@ import io.netty.channel.ChannelHandlerContext;
 * 类说明
 */
 public class TimeServerHandler extends ChannelHandlerAdapter {
+	private static int count = 0;
+
 	@Override
 	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 		ctx.close();
@@ -24,27 +24,18 @@ public class TimeServerHandler extends ChannelHandlerAdapter {
 
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-		toString(msg);
-		String time = DateTime.now().toString("yyyy-MM-dd");
+		String body = (String) msg;
+		Log.log("time server received message:", body, "，the counter is", ++count);
+
+		String time = DateTime.now().toString("yyyy-MM-dd hh:mm:ss SSS"+System.lineSeparator());
 		Log.log("resp:", time);
+		
 		ByteBuf resp = Unpooled.copiedBuffer(time.getBytes());
-		ctx.write(resp);
+		ctx.writeAndFlush(resp);
 	}
 
 	@Override
 	public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-		// TODO Auto-generated method stub
-		super.channelReadComplete(ctx);
+		ctx.flush();
 	}
-
-	private String toString(Object msg) throws UnsupportedEncodingException {
-		ByteBuf buf = (ByteBuf) msg;
-		byte[] req = new byte[buf.readableBytes()];
-		buf.readBytes(req);
-		String message = new String(req, "utf-8");
-		Log.log("netty server receive", message);
-		return null;
-
-	}
-
 }
