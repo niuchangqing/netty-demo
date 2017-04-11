@@ -11,7 +11,7 @@ import io.netty.channel.ChannelPromise;
 
 /**
 * @author Niucqing
-* @email niucqing@gmail.com
+* @email  niucqing@gmail.com
 * @version 创建时间：2017年3月23日 下午5:55:33
 * 类说明
 */
